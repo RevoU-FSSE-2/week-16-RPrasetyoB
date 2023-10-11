@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { userModel } from '../../../config/schema';
+import { userModel } from '../../../config/schemas/schema';
 import { loginUser } from '../../../controllers/user.controller'; 
 
 jest.mock('../../../config/schema'); 

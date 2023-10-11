@@ -1,5 +1,5 @@
-import express, { Request, Response, NextFunction} from 'express'
-import { JWT_Sign } from '../config/jwt'
+import { Request, Response, NextFunction} from 'express'
+import { JWT_Sign } from '../config/auth/jwt'
 import jwt from "jsonwebtoken"
 
 const authRole = async (req: Request, res: Response, next: NextFunction) => {
@@ -10,7 +10,7 @@ const authRole = async (req: Request, res: Response, next: NextFunction) => {
     } else {
       const token = authHeader.split(' ')[1]      
       try {
-        const decodedToken : any  = jwt.verify(token, JWT_Sign) as {userId: string; role: string} ;
+        const decodedToken = jwt.verify(token, JWT_Sign) as {userId: string; role: string} ;
         (req as any).role = decodedToken.role;
 
         if (decodedToken.role === 'manager' || decodedToken.role === 'employee') {

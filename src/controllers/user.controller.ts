@@ -1,8 +1,8 @@
 import { Request, Response, json } from 'express';
-import { userModel } from '../config/schema';
+import { userModel } from '../config/schemas/schema';
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken';
-import { JWT_Sign } from '../config/jwt';
+import { JWT_Sign } from '../config/auth/jwt';
 
 
 //get all user

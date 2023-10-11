@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { userModel } from '../../../config/schema';
+import { userModel } from '../../../config/schemas/schema';
 import { getAllUsers } from '../../../controllers/user.controller';
 
 jest.mock('../../../config/schema');
