@@ -4,8 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const bcrypt_1 = __importDefault(require("bcrypt"));
-const schema_1 = require("../../../config/schema");
-const user_controller_1 = require("../../../controllers/user.controller");
+const schema_1 = require("../../../config/schemas/schema");
+const userController_1 = require("../../../controllers/userController");
 jest.mock('../../../config/schema');
 jest.mock('bcrypt');
 describe('updateUser', () => {
@@ -33,7 +33,7 @@ describe('updateUser', () => {
         schema_1.userModel.findOne.mockResolvedValue(null);
         schema_1.userModel.findByIdAndUpdate.mockResolvedValue(mockUpdatedUser);
         bcrypt_1.default.hash.mockResolvedValue('hashedPassword');
-        await (0, user_controller_1.updateUser)(mockRequest, mockResponse);
+        await (0, userController_1.updateUser)(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(200);
         expect(mockResponse.json).toHaveBeenCalledWith({
             success: true,
@@ -60,7 +60,7 @@ describe('updateUser', () => {
             json: jest.fn()
         };
         schema_1.userModel.findOne.mockResolvedValue(null);
-        await (0, user_controller_1.updateUser)(mockRequest, mockResponse);
+        await (0, userController_1.updateUser)(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(404);
         expect(mockResponse.json).toHaveBeenCalledWith({
             success: false,

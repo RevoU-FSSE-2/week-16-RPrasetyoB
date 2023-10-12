@@ -1,8 +1,5 @@
 import { Request, Response, json } from 'express';
 import { taskModel } from '../config/schemas/schema';
-import { authRole } from '../middlewares/role.access';
-import { log } from 'console';
-
 
 
 const getAllTask = async (req: Request, res: Response) => {
@@ -32,7 +29,6 @@ const getOneTask = async (req: Request, res: Response) => {
           message: "Task not found"
         })
       }
-        
       return res.status(200).json({
         success: true,
         message: "success get task",
@@ -119,6 +115,5 @@ const deleteTask = async (req: Request, res: Response) => {
         });
     }
 };
-
 
 export { createTask, getAllTask, updateTask, getOneTask, deleteTask }

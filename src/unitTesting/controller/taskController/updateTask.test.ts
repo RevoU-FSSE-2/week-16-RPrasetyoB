@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { taskModel } from '../../../config/schemas/schema';
-import { updateTask } from '../../../controllers/task.controller';
+import { updateTask } from '../../../controllers/taskController';
 
 jest.mock('../../../config/schema');
 

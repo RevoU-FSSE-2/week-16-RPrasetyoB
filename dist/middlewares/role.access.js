@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.managerAuth = exports.authRole = void 0;
-const jwt_1 = require("../config/jwt");
+const jwt_1 = require("../config/auth/jwt");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const authRole = async (req, res, next) => {
     const authHeader = req.headers.authorization;

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const schema_1 = require("../../../config/schema");
-const user_controller_1 = require("../../../controllers/user.controller");
+const schema_1 = require("../../../config/schemas/schema");
+const userController_1 = require("../../../controllers/userController");
 jest.mock('../../../config/schema');
 describe('getAllUsers', () => {
     it('should return all users when successful', async () => {
@@ -12,7 +12,7 @@ describe('getAllUsers', () => {
             json: jest.fn()
         };
         schema_1.userModel.find.mockResolvedValue(mockUserData);
-        await (0, user_controller_1.getAllUsers)(mockRequest, mockResponse);
+        await (0, userController_1.getAllUsers)(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(200);
         expect(mockResponse.json).toHaveBeenCalledWith({
             success: true,
@@ -29,7 +29,7 @@ describe('getAllUsers', () => {
         };
         const mockError = new Error('Mock error');
         schema_1.userModel.find.mockRejectedValue(mockError);
-        await (0, user_controller_1.getAllUsers)(mockRequest, mockResponse);
+        await (0, userController_1.getAllUsers)(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(400);
         expect(mockResponse.json).toHaveBeenCalledWith({
             success: false,

@@ -7,13 +7,23 @@ import * as OpenApiValidator from 'express-openapi-validator'
 import fs from 'fs';
 import yaml from 'yaml';
 import middleWares from './middlewares';
+import errorHandlerMiddleware from './middlewares/errorHandler';
+import cors from 'cors';
 
 const app = express();
 const port = process.env.PORT || 3000;
 
+db()
 app.use(express.json());
+app.use(cors())
 middleWares(app)
 app.use(routes);
+app.use(errorHandlerMiddleware);
+
+
+app.listen(port, () => {
+  console.log(`server listening at http://localhost:${port}`);
+});
 
 const openApiPath = 'api-doc.yaml';
 const readApiFile = fs.readFileSync(openApiPath, 'utf8');
@@ -26,12 +36,3 @@ app.use(
     validateRequests: true
   }),
 );
-
-db.on('error', console.error.bind(console, 'connection error: '));
-db.once('open', function () {
-  console.log('Connected to database');
-});
-
-app.listen(port, () => {
-  console.log(`server listening at http://localhost:${port}`);
-});

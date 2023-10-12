@@ -1,3 +1,4 @@
+import { Application } from 'express';
 import dbConfig from './db.config';
 import mongoose from 'mongoose';
 
@@ -17,5 +18,10 @@ mongoose.connect(`mongodb+srv://${dbConfig.username}:${dbConfig.password}@${dbCo
   } as mongoose.ConnectOptions
 );
 
-
-export const db = mongoose.connection;
+const dbConnect = mongoose.connection;
+export const db = () => {
+    dbConnect.on('error', console.error.bind(console, 'connection error: '));
+    dbConnect.once('open', function () {
+    console.log('Connected to database');
+  });
+}

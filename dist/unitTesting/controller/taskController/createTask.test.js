@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const schema_1 = require("../../../config/schema");
-const task_controller_1 = require("../../../controllers/task.controller");
+const schema_1 = require("../../../config/schemas/schema");
+const taskController_1 = require("../../../controllers/taskController");
 jest.mock('../../../config/schema');
 const mockResponse = () => {
     const res = {};
@@ -22,7 +22,7 @@ describe('createTask', () => {
         const mockCreatedTask = { _id: 'testId', task: 'Test task' };
         schema_1.taskModel.create.mockResolvedValueOnce(mockCreatedTask);
         const response = mockResponse();
-        await (0, task_controller_1.createTask)(mockRequest, response);
+        await (0, taskController_1.createTask)(mockRequest, response);
         expect(response.status).toHaveBeenCalledWith(200);
         expect(response.json).toHaveBeenCalledWith({
             success: true,
@@ -34,7 +34,7 @@ describe('createTask', () => {
         const mockError = new Error('Mock error');
         schema_1.taskModel.create.mockRejectedValueOnce(mockError);
         const response = mockResponse();
-        await (0, task_controller_1.createTask)(mockRequest, response);
+        await (0, taskController_1.createTask)(mockRequest, response);
         expect(response.status).toHaveBeenCalledWith(500);
         expect(response.json).toHaveBeenCalledWith({ message: mockError });
     });

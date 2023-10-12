@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { userModel } from '../../../config/schemas/schema';
-import { deleteUser } from '../../../controllers/user.controller'; 
+import { deleteUser } from '../../../controllers/userController'; 
 
 jest.mock('../../../config/schema');
 

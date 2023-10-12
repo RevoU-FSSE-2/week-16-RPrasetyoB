@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const schema_1 = require("../../../config/schema");
-const user_controller_1 = require("../../../controllers/user.controller");
+const schema_1 = require("../../../config/schemas/schema");
+const userController_1 = require("../../../controllers/userController");
 jest.mock('../../../config/schema');
 describe('deleteUser', () => {
     it('should successfully delete a user', async () => {
@@ -18,7 +18,7 @@ describe('deleteUser', () => {
             json: jest.fn()
         };
         schema_1.userModel.findByIdAndDelete.mockResolvedValue(mockDeletedUser);
-        await (0, user_controller_1.deleteUser)(mockRequest, mockResponse);
+        await (0, userController_1.deleteUser)(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(201);
         expect(mockResponse.json).toHaveBeenCalledWith({
             success: true,
@@ -35,7 +35,7 @@ describe('deleteUser', () => {
             json: jest.fn()
         };
         schema_1.userModel.findByIdAndDelete.mockResolvedValue(null);
-        await (0, user_controller_1.deleteUser)(mockRequest, mockResponse);
+        await (0, userController_1.deleteUser)(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(404);
         expect(mockResponse.json).toHaveBeenCalledWith({
             success: false,
@@ -53,7 +53,7 @@ describe('deleteUser', () => {
         };
         const mockError = new Error('Mock error');
         schema_1.userModel.findByIdAndDelete.mockRejectedValue(mockError);
-        await (0, user_controller_1.deleteUser)(mockRequest, mockResponse);
+        await (0, userController_1.deleteUser)(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(500);
         expect(mockResponse.json).toHaveBeenCalledWith({
             message: 'An error occurred while deleting the user or userId wrong format'

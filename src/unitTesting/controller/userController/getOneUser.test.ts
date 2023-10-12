@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { userModel } from '../../../config/schemas/schema';
-import { getOneUser } from '../../../controllers/user.controller';
+import { getOneUser } from '../../../controllers/userController';
 
 jest.mock('../../../config/schema');
 

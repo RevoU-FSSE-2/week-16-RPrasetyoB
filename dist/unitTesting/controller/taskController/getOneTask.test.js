@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const schema_1 = require("../../../config/schema");
-const task_controller_1 = require("../../../controllers/task.controller");
+const schema_1 = require("../../../config/schemas/schema");
+const taskController_1 = require("../../../controllers/taskController");
 jest.mock('../../../config/schema');
 describe('getOneTask', () => {
     it('should return task when found', async () => {
@@ -14,7 +14,7 @@ describe('getOneTask', () => {
             json: jest.fn()
         };
         schema_1.taskModel.findById.mockResolvedValue(mockTask);
-        await (0, task_controller_1.getOneTask)(mockRequest, mockResponse);
+        await (0, taskController_1.getOneTask)(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(200);
         expect(mockResponse.json).toHaveBeenCalledWith({
             success: true,
@@ -31,7 +31,7 @@ describe('getOneTask', () => {
             json: jest.fn()
         };
         schema_1.taskModel.findById.mockResolvedValue(null);
-        await (0, task_controller_1.getOneTask)(mockRequest, mockResponse);
+        await (0, taskController_1.getOneTask)(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(404);
         expect(mockResponse.json).toHaveBeenCalledWith({
             message: "Task not found"
@@ -47,7 +47,7 @@ describe('getOneTask', () => {
         };
         const mockError = new Error('Mock error');
         schema_1.taskModel.findById.mockRejectedValue(mockError);
-        await (0, task_controller_1.getOneTask)(mockRequest, mockResponse);
+        await (0, taskController_1.getOneTask)(mockRequest, mockResponse);
         expect(mockResponse.status).toHaveBeenCalledWith(400);
         expect(mockResponse.json).toHaveBeenCalledWith({
             success: false,

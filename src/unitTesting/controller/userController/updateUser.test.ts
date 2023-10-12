@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import { userModel } from '../../../config/schemas/schema';
-import { updateUser } from '../../../controllers/user.controller';
+import { updateUser } from '../../../controllers/userController';
 
 jest.mock('../../../config/schema');
 jest.mock('bcrypt');

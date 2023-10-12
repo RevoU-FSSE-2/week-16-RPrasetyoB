@@ -1,6 +1,6 @@
 import express from 'express'
 import { authRole, managerAuth } from '../middlewares/role.access'
-import { getAllTask, getOneTask, createTask, updateTask, deleteTask } from '../controllers/task.controller'
+import { getAllTask, getOneTask, createTask, updateTask, deleteTask } from '../controllers/taskController'
 
 const taskRoutes = express.Router()
 taskRoutes.get('/v1/tasks', authRole, getAllTask)
