@@ -11,7 +11,7 @@ routes.get('/', (req: Request, res : Response) => {
     })
 })
 
-routes.use('/', userRoutes)
-routes.use('/', taskRoutes)
+routes.use('/v1', userRoutes)
+routes.use('/v1', taskRoutes)
 
 export default routes;

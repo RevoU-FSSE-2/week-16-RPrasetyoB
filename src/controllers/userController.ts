@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from 'express';
 import { userModel } from '../config/schemas/schema';
 import { loginUser, registerUser, updateRole } from '../services/userService'
 import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
+import { JWT_Sign } from '../config/auth/jwt';
 
 //------ Login user ------
 const login = async (req: Request, res: Response, next: NextFunction) => {
@@ -9,14 +11,18 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     const { username, password } = req.body;
     const result = await loginUser({ username, password });
     if (result.success) {
-      res.cookie("access_token", result.message.accessToken, {
-        maxAge: 1 * 60 * 60 * 1000,
+  
+      res.cookie("accessToken", result.message.accessToken, {
+        maxAge: (7 * 60 * 60 * 1000) + (10 * 60 * 1000),
         httpOnly: true,
+        path: '/'
       });
-      res.cookie("refresh_token", result.message.refreshToken, {
-        maxAge: 24 * 60 * 60 * 1000,
+      res.cookie("refreshToken", result.message.refreshToken, {
+        maxAge: (7 + 24) * 60 * 60 * 1000,
         httpOnly: true,
+        path:'/'
       });
+
       return res.status(200).json({
         success: true,
         message: "Successfully login",
@@ -24,7 +30,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
       });
     }
   } catch (error) {
-    next(error)
+    next(error);
   }
 };
 
@@ -48,20 +54,52 @@ const regUser = async (req : Request, res: Response, next: NextFunction) => {
 
 
 //------ Update Role ------
+interface JwtPayload {
+  id: string; 
+}
+
 const update = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const id = req.params._id
-    const { role } = req.body
-    const updatedRole = await updateRole({_id: id, role: role})
-    if(updatedRole?.success) {
+    const { role } = req.body;
+    const token = req.cookies.accessToken;
+    if (!token) {
+      throw new Error("You are unauthorized");
+    }
+    const decodedToken = jwt.verify(token, JWT_Sign) as JwtPayload
+    const userId = decodedToken.id; 
+    const updatedRole = await updateRole({ _id: userId, role: role });
+
+    if (updatedRole?.success) {
       res.status(200).json({
         success: true,
         message: 'Update role success',
         data: updatedRole
-      })
+      });
+    } else {
+      throw new Error("User not found");
     }
   } catch (error) {
-    next(error)
+    next(error);
+  }
+}
+
+//------ log out ------
+const logoutUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+      res.clearCookie('accessToken', {
+        httpOnly: true,
+        path: '/'
+      });
+      res.clearCookie('refreshToken', {
+        httpOnly: true,
+        path: '/'
+      });
+      return res.status(200).json({    
+          success: true,
+          message: 'Successfully logout'
+      })
+  } catch (error: any) {
+      next(error)
   }
 }
 
@@ -214,5 +252,5 @@ const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
-export { getAllUsers, getOneUser, regUser, login, deleteUser, updateUser, update}
+export { getAllUsers, getOneUser, regUser, login, deleteUser, updateUser, update, logoutUser}
 

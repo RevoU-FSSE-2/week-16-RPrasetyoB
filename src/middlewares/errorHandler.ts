@@ -1,14 +1,17 @@
-import { Response } from "express";
+import { Request, Response, NextFunction } from 'express';
+import ErrorCatch from '../errors/errorCatch';
 
-const errorHandlerMiddleware = (
-  err: Error | any,
-  res: Response
-) => {
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message,
-    errors: err.errors,
-  });
-};
+function errorHandler(
+  error: ErrorCatch,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const status = error.status || 500;
+  const message = error.message || 'An error occurred';
+  const success = error.success || false;
 
-export default errorHandlerMiddleware;
+  res.status(status).json({ success, message });
+}
+
+export default errorHandler;

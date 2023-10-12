@@ -1,10 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const errorHandlerMiddleware = (err, res) => {
-    res.status(err.status || 500).json({
-        success: false,
-        message: err.message,
-        errors: err.errors,
-    });
-};
-exports.default = errorHandlerMiddleware;
+function errorHandler(error, req, res, next) {
+    const status = error.status || 500;
+    const message = error.message || 'An error occurred';
+    const success = error.success || false;
+    res.status(status).json({ success, message });
+}
+exports.default = errorHandler;

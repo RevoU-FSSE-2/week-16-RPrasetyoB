@@ -13,7 +13,7 @@ const authRole = async (req: Request, res: Response, next: NextFunction) => {
         const decodedToken = jwt.verify(token, JWT_Sign) as {userId: string; role: string} ;
         (req as any).role = decodedToken.role;
 
-        if (decodedToken.role === 'manager' || decodedToken.role === 'employee') {
+        if (decodedToken.role === 'manager' || decodedToken.role === 'employee'|| decodedToken.role === 'leader') {
           next()
         } else {
           res.status(401).json({ error: 'Unauthorized' })

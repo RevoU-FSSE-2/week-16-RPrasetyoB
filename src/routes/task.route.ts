@@ -3,10 +3,10 @@ import { authRole, managerAuth } from '../middlewares/role.access'
 import { getAllTask, getOneTask, createTask, updateTask, deleteTask } from '../controllers/taskController'
 
 const taskRoutes = express.Router()
-taskRoutes.get('/v1/tasks', authRole, getAllTask)
-taskRoutes.get('/v1/tasks/:id', authRole, getOneTask)
-taskRoutes.post('/v1/tasks', managerAuth, createTask)
-taskRoutes.patch('/v1/tasks/:id', authRole, updateTask)
-taskRoutes.delete('/v1/tasks/:id', managerAuth, deleteTask)
+taskRoutes.get('/tasks', authRole, getAllTask)
+taskRoutes.get('/tasks/:id', authRole, getOneTask)
+taskRoutes.post('/tasks', managerAuth, createTask)
+taskRoutes.patch('/tasks/:id', authRole, updateTask)
+taskRoutes.delete('/tasks/:id', managerAuth, deleteTask)
 
 export default taskRoutes

@@ -7,7 +7,7 @@ import * as OpenApiValidator from 'express-openapi-validator'
 import fs from 'fs';
 import yaml from 'yaml';
 import middleWares from './middlewares';
-import errorHandlerMiddleware from './middlewares/errorHandler';
+import errorHandler from './middlewares/errorHandler';
 import cors from 'cors';
 
 const app = express();
@@ -18,7 +18,7 @@ app.use(express.json());
 app.use(cors())
 middleWares(app)
 app.use(routes);
-app.use(errorHandlerMiddleware);
+app.use(errorHandler);
 
 
 app.listen(port, () => {

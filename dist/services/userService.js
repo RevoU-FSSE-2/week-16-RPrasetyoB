@@ -15,17 +15,17 @@ const errorCatch_1 = __importDefault(require("../errors/errorCatch"));
 const failedLogins = new node_cache_1.default({ stdTTL: 20 });
 //------ login ------
 const loginUser = async ({ username, password }) => {
-    const user = await schema_1.userModel.findOne({ username });
-    const loginAttempts = failedLogins.get(user === null || user === void 0 ? void 0 : user.username) || 0;
-    console.log('loginAttempts', loginAttempts);
-    if (loginAttempts >= 4) {
-        throw new errorCatch_1.default({
-            success: false,
-            message: 'Too many failed login attempts. please try again later',
-            status: 429
-        });
-    }
     try {
+        const user = await schema_1.userModel.findOne({ username });
+        const loginAttempts = failedLogins.get(user === null || user === void 0 ? void 0 : user.username) || 0;
+        console.log('loginAttempts', loginAttempts);
+        if (loginAttempts >= 4) {
+            throw new errorCatch_1.default({
+                success: false,
+                message: 'Too many failed login attempts. please try again later',
+                status: 429
+            });
+        }
         if (!user) {
             failedLogins.set(username, loginAttempts + 1);
             throw new errorCatch_1.default({
@@ -36,14 +36,12 @@ const loginUser = async ({ username, password }) => {
         }
         const isPasswordCorrect = await bcrypt_1.default.compare(password, user.password);
         if (isPasswordCorrect) {
-            if (!jwt_1.JWT_Sign)
-                throw new Error('JWT_SIGN is not defined');
             const accessTokenExpired = (0, date_fns_1.addDays)(new Date(), 1);
             const accessToken = (0, jsonwebtoken_1.sign)({
                 username: user.username,
                 id: user._id,
                 role: user.role
-            }, jwt_1.JWT_Sign, { expiresIn: '24' });
+            }, jwt_1.JWT_Sign, { expiresIn: '24h' });
             const refreshTokenPayload = {
                 username: user.username,
                 id: user._id,
@@ -115,7 +113,6 @@ const registerUser = async ({ username, email, password }) => {
         }
         const hashedPass = await bcrypt_1.default.hash(password, 10);
         const newUser = await schema_1.userModel.create({ username, email, password: hashedPass });
-        console.log('newUser', newUser);
         return {
             success: true,
             message: newUser
@@ -134,11 +131,15 @@ exports.registerUser = registerUser;
 //------ update user role ------
 const updateRole = async ({ _id, role }) => {
     try {
-        const response = await schema_1.userModel.findByIdAndUpdate({ _id: _id }, { $addToSet: { role: role } });
+        const response = await schema_1.userModel.findByIdAndUpdate(_id, { role: role });
         if (response) {
             return {
                 success: true,
+                message: response
             };
+        }
+        else {
+            throw new Error("User not found");
         }
     }
     catch (error) {
@@ -146,7 +147,7 @@ const updateRole = async ({ _id, role }) => {
         throw new errorCatch_1.default({
             success: false,
             message: error.message,
-            status: error.status
+            status: error.status,
         });
     }
 };

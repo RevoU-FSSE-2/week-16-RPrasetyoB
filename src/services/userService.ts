@@ -5,6 +5,7 @@ import { JwtPayload, sign } from 'jsonwebtoken';
 import { JWT_Sign } from '../config/auth/jwt';;
 import NodeCache from 'node-cache';
 import ErrorCatch from '../errors/errorCatch';
+import { NextFunction } from 'express';
 
 interface LoginInput {
     username: string;
@@ -26,19 +27,18 @@ const failedLogins = new NodeCache({ stdTTL: 20 }) as any
 
 //------ login ------
 const loginUser = async ({username, password}: LoginInput) => {
+    try {
     const user = await userModel.findOne({ username })
     const loginAttempts = failedLogins.get(user?.username) || 0
     console.log('loginAttempts',loginAttempts)
 
-    if(loginAttempts >= 4) {
-        throw new ErrorCatch({
-            success: false,
-            message: 'Too many failed login attempts. please try again later',
-            status: 429
-        })
-    }
-
-    try {
+        if(loginAttempts >= 4) {
+            throw new ErrorCatch({
+                success: false,
+                message: 'Too many failed login attempts. please try again later',
+                status: 429
+            })
+        }  
         if(!user) {        
             failedLogins.set(username, loginAttempts + 1)
             throw new ErrorCatch({
@@ -50,14 +50,13 @@ const loginUser = async ({username, password}: LoginInput) => {
         
         const isPasswordCorrect = await bcrypt.compare(password, user.password)
         if (isPasswordCorrect) {
-            if(!JWT_Sign) throw new Error('JWT_SIGN is not defined')
             const accessTokenExpired = addDays(new Date(), 1)
             const accessToken = sign(
                 {
                     username: user.username,
                     id: user._id,
                     role: user.role
-                }, JWT_Sign, {expiresIn: '24'}
+                }, JWT_Sign, {expiresIn: '24h'}
             );
             const refreshTokenPayload : JwtPayload = {
                 username: user.username,
@@ -131,7 +130,6 @@ const registerUser = async ({ username, email, password}: RegisterInput) => {
         }
         const hashedPass = await bcrypt.hash(password, 10);
         const newUser = await userModel.create({ username, email, password: hashedPass });
-        console.log('newUser',newUser)
         return {
             success: true,
             message: newUser
@@ -147,22 +145,26 @@ const registerUser = async ({ username, email, password}: RegisterInput) => {
 }
 
 //------ update user role ------
-const updateRole = async ({_id, role}: UserRole) => {
+const updateRole = async ({ _id, role }: UserRole) => {
     try {
-        const response = await userModel.findByIdAndUpdate({_id: _id}, {$addToSet: { role: role}})
-        if(response) {
-            return {
-                success : true,
-            }
-        }        
+      const response = await userModel.findByIdAndUpdate(_id, { role: role });  
+      if (response) {
+        return {          
+          success: true,
+          message: response
+        };
+      } else {
+        throw new Error("User not found");
+      }
     } catch (error: any) {
-        console.log(error)
-        throw new ErrorCatch({
-            success: false,
-            message: error.message,
-            status: error.status
-        })
+      console.log(error);
+      throw new ErrorCatch({
+        success: false,
+        message: error.message,
+        status: error.status,
+      });
     }
-}
+  };
 
-export { loginUser, registerUser, updateRole}
+
+export { loginUser, registerUser, updateRole }

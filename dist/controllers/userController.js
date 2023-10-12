@@ -3,23 +3,27 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.update = exports.updateUser = exports.deleteUser = exports.login = exports.regUser = exports.getOneUser = exports.getAllUsers = void 0;
+exports.logoutUser = exports.update = exports.updateUser = exports.deleteUser = exports.login = exports.regUser = exports.getOneUser = exports.getAllUsers = void 0;
 const schema_1 = require("../config/schemas/schema");
 const userService_1 = require("../services/userService");
 const bcrypt_1 = __importDefault(require("bcrypt"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const jwt_1 = require("../config/auth/jwt");
 //------ Login user ------
 const login = async (req, res, next) => {
     try {
         const { username, password } = req.body;
         const result = await (0, userService_1.loginUser)({ username, password });
         if (result.success) {
-            res.cookie("access_token", result.message.accessToken, {
-                maxAge: 1 * 60 * 60 * 1000,
+            res.cookie("accessToken", result.message.accessToken, {
+                maxAge: (7 * 60 * 60 * 1000) + (10 * 60 * 1000),
                 httpOnly: true,
+                path: '/'
             });
-            res.cookie("refresh_token", result.message.refreshToken, {
-                maxAge: 24 * 60 * 60 * 1000,
+            res.cookie("refreshToken", result.message.refreshToken, {
+                maxAge: (7 + 24) * 60 * 60 * 1000,
                 httpOnly: true,
+                path: '/'
             });
             return res.status(200).json({
                 success: true,
@@ -51,12 +55,16 @@ const regUser = async (req, res, next) => {
     }
 };
 exports.regUser = regUser;
-//------ Update Role ------
 const update = async (req, res, next) => {
     try {
-        const id = req.params._id;
         const { role } = req.body;
-        const updatedRole = await (0, userService_1.updateRole)({ _id: id, role: role });
+        const token = req.cookies.accessToken;
+        if (!token) {
+            throw new Error("You are unauthorized");
+        }
+        const decodedToken = jsonwebtoken_1.default.verify(token, jwt_1.JWT_Sign);
+        const userId = decodedToken.id;
+        const updatedRole = await (0, userService_1.updateRole)({ _id: userId, role: role });
         if (updatedRole === null || updatedRole === void 0 ? void 0 : updatedRole.success) {
             res.status(200).json({
                 success: true,
@@ -64,12 +72,36 @@ const update = async (req, res, next) => {
                 data: updatedRole
             });
         }
+        else {
+            throw new Error("User not found");
+        }
     }
     catch (error) {
         next(error);
     }
 };
 exports.update = update;
+//------ log out ------
+const logoutUser = async (req, res, next) => {
+    try {
+        res.clearCookie('accessToken', {
+            httpOnly: true,
+            path: '/'
+        });
+        res.clearCookie('refreshToken', {
+            httpOnly: true,
+            path: '/'
+        });
+        return res.status(200).json({
+            success: true,
+            message: 'Successfully logout'
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.logoutUser = logoutUser;
 //------ Update user ------
 const updateUser = async (req, res) => {
     try {

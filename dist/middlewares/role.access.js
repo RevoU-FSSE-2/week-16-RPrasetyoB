@@ -16,7 +16,7 @@ const authRole = async (req, res, next) => {
         try {
             const decodedToken = jsonwebtoken_1.default.verify(token, jwt_1.JWT_Sign);
             req.role = decodedToken.role;
-            if (decodedToken.role === 'manager' || decodedToken.role === 'employee') {
+            if (decodedToken.role === 'manager' || decodedToken.role === 'employee' || decodedToken.role === 'leader') {
                 next();
             }
             else {

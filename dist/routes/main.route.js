@@ -13,6 +13,6 @@ routes.get('/', (req, res) => {
         message: 'Welcome to RPB rest API'
     });
 });
-routes.use('/', user_route_1.default);
-routes.use('/', task_route_1.default);
+routes.use('/v1', user_route_1.default);
+routes.use('/v1', task_route_1.default);
 exports.default = routes;
