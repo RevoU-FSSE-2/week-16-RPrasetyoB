@@ -1,7 +1,7 @@
 import helmetApp from "./helmet";
 import morganApp from "./morgan";
 import { Express } from "express";
-import xRequestId from "../middlewares/xRequestId";
+import xRequestId from "./xRequestId";
 import cookieMidleware from "./cookiesParser";
 // import corsMiddleware from "./cors";
 
