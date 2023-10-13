@@ -195,4 +195,6 @@ const passResetReq = async (email : string) => {
     }
 }
 
+// const passwordReset = async ()
+
 export { loginUser, registerUser, updateRole, passResetReq}
