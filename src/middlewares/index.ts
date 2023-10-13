@@ -3,14 +3,12 @@ import morganApp from "./morgan";
 import { Express } from "express";
 import xRequestId from "./xRequestId";
 import cookieMidleware from "./cookiesParser";
-// import corsMiddleware from "./cors";
 
 const middleWares = (app: Express)=> {
     helmetApp(app);
     morganApp(app);
-    // corsMiddleware(app)
-    app.use(xRequestId)      
-    cookieMidleware(app)  
+    app.use(xRequestId)
+    cookieMidleware(app)
 }
 
 export default middleWares

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateRole = exports.registerUser = exports.loginUser = void 0;
+exports.passResetReq = exports.updateRole = exports.registerUser = exports.loginUser = void 0;
 const schema_1 = require("../config/schemas/schema");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const date_fns_1 = require("date-fns");
@@ -12,7 +12,9 @@ const jwt_1 = require("../config/auth/jwt");
 ;
 const node_cache_1 = __importDefault(require("node-cache"));
 const errorCatch_1 = __importDefault(require("../errors/errorCatch"));
+const uuid_1 = require("uuid");
 const failedLogins = new node_cache_1.default({ stdTTL: 20 });
+const cache = new node_cache_1.default({ stdTTL: 60 });
 //------ login ------
 const loginUser = async ({ username, password }) => {
     try {
@@ -152,3 +154,31 @@ const updateRole = async ({ _id, role }) => {
     }
 };
 exports.updateRole = updateRole;
+//------ password reset request ------
+const passResetReq = async (email) => {
+    try {
+        const user = await schema_1.userModel.findOne({ email: email });
+        if (!user) {
+            throw new errorCatch_1.default({
+                success: false,
+                message: 'Email not registered',
+                status: 404,
+            });
+        }
+        const key = (0, uuid_1.v4)();
+        cache.set(key, email, 25 * 1000);
+        return {
+            success: true,
+            message: "Password reset link sent",
+            data: key
+        };
+    }
+    catch (error) {
+        throw new errorCatch_1.default({
+            success: false,
+            message: error.message,
+            status: error.status,
+        });
+    }
+};
+exports.passResetReq = passResetReq;

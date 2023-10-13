@@ -24,6 +24,7 @@ interface UserRole {
 }
 
 const failedLogins = new NodeCache({ stdTTL: 20 }) as any
+const cache = new NodeCache({ stdTTL: 60 }) as any;
 
 //------ login ------
 const loginUser = async ({username, password}: LoginInput) => {
@@ -168,17 +169,30 @@ const updateRole = async ({ _id, role }: UserRole) => {
 
 
 //------ password reset request ------
-// const passResetReq = async (email : string) => {
-//     const user = await userModel.findOne({email:email});
-//     if(!user) {
-//         throw new ErrorCatch({
-//             success: false,
-//             message: 'Email not registered',
-//             status: 404,
-//         })
-//     }
-//     const key = uuidv4()
-//     caches.has(key, user.email, 25 * 1 * 1000)
-// }
+const passResetReq = async (email : string) => {
+    try {
+        const user = await userModel.findOne({email:email});
+        if(!user) {
+            throw new ErrorCatch({
+                success: false,
+                message: 'Email not registered',
+                status: 404,
+            })
+        }
+        const key = v4()
+        cache.set(key, email, 25 * 1000)
+        return {
+            success: true,
+            message: "Password reset link sent",
+            data: key
+        }        
+    } catch (error : any) {
+        throw new ErrorCatch({
+            success: false,
+            message: error.message,
+            status: error.status,
+        })
+    }
+}
 
-export { loginUser, registerUser, updateRole}
+export { loginUser, registerUser, updateRole, passResetReq}
