@@ -5,7 +5,6 @@ import { JwtPayload, sign } from 'jsonwebtoken';
 import { JWT_Sign } from '../config/auth/jwt';;
 import NodeCache from 'node-cache';
 import ErrorCatch from '../errors/errorCatch';
-import { v4 as uuidv4 } from 'uuid';
 import { v4 } from 'uuid';
 
 interface LoginInput {

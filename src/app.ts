@@ -12,7 +12,7 @@ const port = process.env.PORT || 3000;
 db()
 app.use(express.json());
 app.use(cors())
-middleWares(app)
+app.use(middleWares)
 app.use(routes);
 app.use(errorHandler);
 

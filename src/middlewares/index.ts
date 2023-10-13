@@ -9,8 +9,8 @@ const middleWares = (app: Express)=> {
     helmetApp(app);
     morganApp(app);
     // corsMiddleware(app)
-    cookieMidleware(app)  
     app.use(xRequestId)      
+    cookieMidleware(app)  
 }
 
 export default middleWares

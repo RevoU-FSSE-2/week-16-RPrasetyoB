@@ -12,7 +12,7 @@ const middleWares = (app) => {
     (0, helmet_1.default)(app);
     (0, morgan_1.default)(app);
     // corsMiddleware(app)
-    (0, cookiesParser_1.default)(app);
     app.use(xRequestId_1.default);
+    (0, cookiesParser_1.default)(app);
 };
 exports.default = middleWares;
