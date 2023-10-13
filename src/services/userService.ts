@@ -5,7 +5,8 @@ import { JwtPayload, sign } from 'jsonwebtoken';
 import { JWT_Sign } from '../config/auth/jwt';;
 import NodeCache from 'node-cache';
 import ErrorCatch from '../errors/errorCatch';
-import { NextFunction } from 'express';
+import { v4 as uuidv4 } from 'uuid';
+import { v4 } from 'uuid';
 
 interface LoginInput {
     username: string;
@@ -167,4 +168,18 @@ const updateRole = async ({ _id, role }: UserRole) => {
   };
 
 
-export { loginUser, registerUser, updateRole }
+//------ password reset request ------
+// const passResetReq = async (email : string) => {
+//     const user = await userModel.findOne({email:email});
+//     if(!user) {
+//         throw new ErrorCatch({
+//             success: false,
+//             message: 'Email not registered',
+//             status: 404,
+//         })
+//     }
+//     const key = uuidv4()
+//     caches.has(key, user.email, 25 * 1 * 1000)
+// }
+
+export { loginUser, registerUser, updateRole}

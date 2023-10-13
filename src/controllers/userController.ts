@@ -13,12 +13,12 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     if (result.success) {
   
       res.cookie("accessToken", result.message.accessToken, {
-        maxAge: (7 * 60 * 60 * 1000) + (10 * 60 * 1000),
+        maxAge: 5 * 60 * 1000,
         httpOnly: true,
         path: '/'
       });
       res.cookie("refreshToken", result.message.refreshToken, {
-        maxAge: (7 + 24) * 60 * 60 * 1000,
+        maxAge: 1 * 60 * 60 * 1000,
         httpOnly: true,
         path:'/'
       });
