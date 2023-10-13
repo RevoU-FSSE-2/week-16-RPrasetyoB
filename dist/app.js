@@ -15,7 +15,7 @@ const port = process.env.PORT || 3000;
 (0, db_connection_1.db)();
 app.use(express_1.default.json());
 app.use((0, cors_1.default)());
-app.use(middlewares_1.default);
+(0, middlewares_1.default)(app);
 app.use(main_route_1.default);
 app.use(errorHandler_1.default);
 app.listen(port, () => {

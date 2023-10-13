@@ -7,7 +7,7 @@ declare module "express" {
   }
 }
 
-const xRequestId = (req: Request, res: Response, next: NextFunction) => {
+export const xRequestId = (req: Request, res: Response, next: NextFunction) => {
   if (req.headers["x-request-id"]) {
     res.setHeader("x-request-id", req.headers["x-request-id"] as string);
     req.request_id = req.headers["x-request-id"] as string;
@@ -18,5 +18,3 @@ const xRequestId = (req: Request, res: Response, next: NextFunction) => {
   }
   next();
 };
-
-export default xRequestId;
