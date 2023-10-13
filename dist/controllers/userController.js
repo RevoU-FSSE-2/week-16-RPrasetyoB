@@ -8,6 +8,7 @@ const schema_1 = require("../config/schemas/schema");
 const userService_1 = require("../services/userService");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const getCookie_1 = __importDefault(require("../reusable/getCookie"));
+const jwt_1 = require("../config/auth/jwt");
 //------ Login user ------
 const login = async (req, res, next) => {
     try {
@@ -15,7 +16,7 @@ const login = async (req, res, next) => {
         const result = await (0, userService_1.loginUser)({ username, password });
         if (result.success) {
             res.cookie("accessToken", result.message.accessToken, {
-                maxAge: 5 * 60 * 1000,
+                maxAge: 5 * 1000,
                 httpOnly: true,
                 path: '/'
             });
@@ -129,27 +130,46 @@ const resetPass = async (req, res, next) => {
 exports.resetPass = resetPass;
 //------ token refresh -------
 const accessTokenRefresh = async (req, res, next) => {
+    const refreshToken = req.cookies['refreshToken'];
+    const decodedToken = jsonwebtoken_1.default.decode(refreshToken);
+    if (!refreshToken) {
+        return res.status(401).json({
+            success: false,
+            message: "refresh token is missing"
+        });
+    }
+    if (!jwt_1.JWT_Sign)
+        throw new Error('JWT_SIGN is not defined');
+    const decodedRefreshToken = jsonwebtoken_1.default.verify(refreshToken, jwt_1.JWT_Sign);
     try {
-        const refreshToken = req.cookies.refreshToken;
-        if (!refreshToken) {
-            res.status(401).json({ message: 'No refresh token provided' });
-            return;
+        if (!decodedRefreshToken || !decodedToken.exp) {
+            throw {
+                success: false,
+                status: 401,
+                message: 'Refresh token is invalid or has expired. Please login again',
+            };
         }
-        const accessToken = await (0, userService_1.refreshAccessToken)(refreshToken);
-        if (accessToken) {
-            res.cookie('accessToken', accessToken, {
-                httpOnly: true,
-                path: '/',
-                maxAge: 15 * 60 * 1000,
-            });
-            res.json({
-                success: true,
-                message: 'Access token refreshed successfully'
-            });
+        if (decodedToken.exp < Date.now() / 1000) {
+            throw {
+                success: false,
+                status: 401,
+                message: "Refresh token has expired. Please login again"
+            };
         }
-        else {
-            res.status(403).json({ message: 'Invalid refresh token' });
-        }
+        const accessToken = jsonwebtoken_1.default.sign({
+            username: decodedToken.username,
+            id: decodedToken._id,
+            role: decodedToken.role
+        }, jwt_1.JWT_Sign, { expiresIn: '10m' });
+        res.cookie("accessToken", accessToken, {
+            maxAge: 10 * 60 * 1000,
+            httpOnly: true,
+        });
+        return res.status(200).json({
+            success: true,
+            message: "access token refresh successfully",
+            data: { accessToken }
+        });
     }
     catch (error) {
         next(error);

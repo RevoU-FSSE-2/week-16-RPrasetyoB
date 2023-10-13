@@ -55,7 +55,7 @@ const loginUser = async ({username, password}: LoginInput) => {
                     username: user.username,
                     id: user._id,
                     role: user.role
-                }, JWT_Sign, {expiresIn: '24h'}
+                }, JWT_Sign, {expiresIn: '10m'}
             );
             const refreshTokenPayload : JwtPayload = {
                 username: user.username,

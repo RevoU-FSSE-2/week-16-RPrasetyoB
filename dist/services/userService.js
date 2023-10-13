@@ -43,7 +43,7 @@ const loginUser = async ({ username, password }) => {
                 username: user.username,
                 id: user._id,
                 role: user.role
-            }, jwt_1.JWT_Sign, { expiresIn: '24h' });
+            }, jwt_1.JWT_Sign, { expiresIn: '10m' });
             const refreshTokenPayload = {
                 username: user.username,
                 id: user._id,

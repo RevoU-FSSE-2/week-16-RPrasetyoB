@@ -10,12 +10,16 @@ const db_connection_1 = require("./config/db/db.connection");
 const middlewares_1 = __importDefault(require("./middlewares"));
 const errorHandler_1 = __importDefault(require("./middlewares/errorHandler"));
 const cors_1 = __importDefault(require("cors"));
+const checkAccess_1 = __importDefault(require("./middlewares/checkAccess"));
+const authRoute_1 = __importDefault(require("./routes/authRoute"));
 const app = (0, express_1.default)();
 const port = process.env.PORT || 3000;
 (0, db_connection_1.db)();
 app.use(express_1.default.json());
 app.use((0, cors_1.default)());
 (0, middlewares_1.default)(app);
+app.use(authRoute_1.default);
+app.use(checkAccess_1.default);
 app.use(main_route_1.default);
 app.use(errorHandler_1.default);
 app.listen(port, () => {

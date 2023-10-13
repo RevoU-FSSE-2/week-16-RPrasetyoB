@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import { userModel } from '../config/schemas/schema';
-import { loginUser, passResetReq, passwordReset, refreshAccessToken, registerUser, updateRole } from '../services/userService'
-import bcrypt from 'bcrypt'
+import { loginUser, passResetReq, passwordReset, registerUser, updateRole } from '../services/userService'
 import jwt from 'jsonwebtoken'
 import getCookie from '../reusable/getCookie';
+import { JWT_Sign } from '../config/auth/jwt';
 
 //------ Login user ------
 const login = async (req: Request, res: Response, next: NextFunction) => {
@@ -12,7 +12,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     const result = await loginUser({ username, password });
     if (result.success) {  
       res.cookie("accessToken", result.message.accessToken, {
-        maxAge: 5 * 60 * 1000,
+        maxAge: 5 * 1000,
         httpOnly: true,
         path: '/'
       });
@@ -125,30 +125,57 @@ const resetPass = async (req: Request, res: Response, next: NextFunction) => {
 
 //------ token refresh -------
 const accessTokenRefresh = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const refreshToken = req.cookies.refreshToken;
+  const refreshToken = req.cookies['refreshToken'];
+  const decodedToken: jwt.JwtPayload = jwt.decode(refreshToken) as jwt.JwtPayload;
+
     if (!refreshToken) {
-      res.status(401).json({ message: 'No refresh token provided' });
-      return;
+      return res.status(401).json({
+        success: false,
+        message: "refresh token is missing"
+      })
     }
-    const accessToken = await refreshAccessToken(refreshToken);
-    if (accessToken) {
-      res.cookie('accessToken', accessToken, {
+
+    if (!JWT_Sign) throw new Error('JWT_SIGN is not defined')
+      const decodedRefreshToken = jwt.verify(refreshToken, JWT_Sign);
+
+    try {
+      if (!decodedRefreshToken || !decodedToken.exp) {
+        throw {
+          success: false,
+          status: 401,
+          message: 'Refresh token is invalid or has expired. Please login again',
+        }
+      }
+
+      if (decodedToken.exp < Date.now() / 1000) {
+        throw {
+          success: false,
+          status: 401,
+          message: "Refresh token has expired. Please login again"
+        }
+      }
+
+      const accessToken= jwt.sign({
+        username: decodedToken.username,
+        id: decodedToken._id,
+        role: decodedToken.role
+      }, JWT_Sign, {expiresIn: '10m'})
+
+      res.cookie("accessToken", accessToken, {
+        maxAge: 10 * 60 * 1000,
         httpOnly: true,
-        path: '/',
-        maxAge: 15 * 60 * 1000,
-      });
-      res.json({
+      })
+
+      return res.status(200).json({
         success: true,
-        message: 'Access token refreshed successfully'
-      });
-    } else {
-      res.status(403).json({ message: 'Invalid refresh token' });
+        message: "access token refresh successfully",
+        data: { accessToken }
+      })
+
+    } catch (error) {
+      next(error)
     }
-  } catch (error) {
-    next(error)
-  }
-}
+};
 
 
 //------ log out ------
