@@ -1,10 +1,10 @@
 import { userModel } from '../config/schemas/schema';
 import bcrypt from 'bcrypt'
 import { addDays } from "date-fns";
-import { JwtPayload, sign } from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import { JWT_Sign } from '../config/auth/jwt';;
 import NodeCache from 'node-cache';
-import ErrorCatch from '../errors/errorCatch';
+import ErrorCatch from '../reusable/errorCatch';
 import { v4 } from 'uuid';
 
 interface LoginInput {
@@ -17,20 +17,19 @@ interface RegisterInput {
     email: string;
     password: string;
 }
-
 interface UserRole {
-    _id: string;
+    username: string;
     role: string;
 }
 
 const failedLogins = new NodeCache({ stdTTL: 20 }) as any
-const cache = new NodeCache({ stdTTL: 60 }) as any;
+const cache = new NodeCache({ stdTTL: 20 }) as any;
 
 //------ login ------
 const loginUser = async ({username, password}: LoginInput) => {
     try {
     const user = await userModel.findOne({ username })
-    const loginAttempts = failedLogins.get(user?.username) || 0
+    const loginAttempts = failedLogins.get(username) || 0
     console.log('loginAttempts',loginAttempts)
 
         if(loginAttempts >= 4) {
@@ -48,11 +47,10 @@ const loginUser = async ({username, password}: LoginInput) => {
                 status: 401
             })
         }
-        
         const isPasswordCorrect = await bcrypt.compare(password, user.password)
         if (isPasswordCorrect) {
             const accessTokenExpired = addDays(new Date(), 1)
-            const accessToken = sign(
+            const accessToken = jwt.sign(
                 {
                     username: user.username,
                     id: user._id,
@@ -64,7 +62,7 @@ const loginUser = async ({username, password}: LoginInput) => {
                 id: user._id,
                 role: user.role,
             };
-            const refreshToken = sign(refreshTokenPayload, JWT_Sign, {
+            const refreshToken = jwt.sign(refreshTokenPayload, JWT_Sign, {
                 expiresIn: '7d',
             })
             await failedLogins.del(username);
@@ -146,9 +144,13 @@ const registerUser = async ({ username, email, password}: RegisterInput) => {
 }
 
 //------ update user role ------
-const updateRole = async ({ _id, role }: UserRole) => {
+const updateRole = async ({ username, role }: UserRole) => {
     try {
-      const response = await userModel.findByIdAndUpdate(_id, { role: role });  
+      const response = await userModel.findOneAndUpdate(
+        { username: username },
+        { role: role },
+        { new: true }
+      );  
       if (response) {
         return {          
           success: true,
@@ -169,6 +171,12 @@ const updateRole = async ({ _id, role }: UserRole) => {
 
 
 //------ password reset request ------
+const sendEmail = (email: string, key: string) => {
+    console.log(`Subject: Password reset request`);
+    console.log(`To: ${email}`);
+    console.log(`${key}`);
+    // const linkReset = `https://week-16-rprasetyob-production.up.railway.app/reset?key=${key}  
+  };
 const passResetReq = async (email : string) => {
     try {
         const user = await userModel.findOne({email:email});
@@ -181,10 +189,13 @@ const passResetReq = async (email : string) => {
         }
         const key = v4()
         cache.set(key, email, 25 * 1000)
+        sendEmail(user.email, key)
+        const linkReset = `${key}`
+        // const linkReset = `https://week-16-rprasetyob-production.up.railway.app/reset?key=${key}`
         return {
             success: true,
             message: "Password reset link sent",
-            data: key
+            data: linkReset
         }        
     } catch (error : any) {
         throw new ErrorCatch({
@@ -195,6 +206,57 @@ const passResetReq = async (email : string) => {
     }
 }
 
-// const passwordReset = async ()
+const passwordReset = async (key: string, password: string) => {
+    try {
+        const email = cache.get(key);
+        if(!email) {
+            throw new ErrorCatch({
+                success: false,
+                status: 401,
+                message: "Invalid or expired token",
+            })
+        }
+        const user = await userModel.findOne({ email: email });
+        if(!user) {
+            throw new ErrorCatch({
+                success: false,
+                message: 'Email invalid / not registered',
+                status: 401,
+            })
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await user.updateOne({ password: hashedPassword });
+    
+        cache.del(key);
+        return {
+            success: true,
+            message: 'Password reset successful',
+        };
+    } catch (error : any) {
+        throw new ErrorCatch({
+            success: false,
+            message: error.message,
+            status: error.status,
+        })
+    }
+}
 
-export { loginUser, registerUser, updateRole, passResetReq}
+
+//------- RefreshToken -------
+const refreshAccessToken = async (refreshToken: string) => {
+    try {
+      const user = jwt.verify(refreshToken, JWT_Sign);
+      const accessToken = jwt.sign({ user }, JWT_Sign, { expiresIn: '15m' });
+  
+      return accessToken;
+    } catch (error : any) {
+        throw new ErrorCatch({
+            success: false,
+            message: error.message,
+            status: error.status,
+        })
+    }
+  }
+
+
+export { loginUser, registerUser, updateRole, passResetReq, passwordReset, refreshAccessToken}

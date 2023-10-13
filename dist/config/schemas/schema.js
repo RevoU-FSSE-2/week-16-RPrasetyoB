@@ -36,7 +36,10 @@ const taskSchema = new mongoose_1.default.Schema({
     status: {
         type: String,
         default: "Not started",
-        enum: ['Not started', 'In progress', 'In review', 'Done / Approved', 'Need revision/ Rejected']
+        enum: ["Not started", "Approved", "Rejected"]
+    },
+    maker: {
+        type: String,
     },
     isDeleted: {
         type: Boolean

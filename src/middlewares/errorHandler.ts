@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import ErrorCatch from '../errors/errorCatch';
+import ErrorCatch from '../reusable/errorCatch';
 
 function errorHandler(
   error: ErrorCatch,

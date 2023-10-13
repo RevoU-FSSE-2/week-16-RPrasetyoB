@@ -3,23 +3,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.passResetReq = exports.updateRole = exports.registerUser = exports.loginUser = void 0;
+exports.refreshAccessToken = exports.passwordReset = exports.passResetReq = exports.updateRole = exports.registerUser = exports.loginUser = void 0;
 const schema_1 = require("../config/schemas/schema");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const date_fns_1 = require("date-fns");
-const jsonwebtoken_1 = require("jsonwebtoken");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const jwt_1 = require("../config/auth/jwt");
 ;
 const node_cache_1 = __importDefault(require("node-cache"));
-const errorCatch_1 = __importDefault(require("../errors/errorCatch"));
+const errorCatch_1 = __importDefault(require("../reusable/errorCatch"));
 const uuid_1 = require("uuid");
 const failedLogins = new node_cache_1.default({ stdTTL: 20 });
-const cache = new node_cache_1.default({ stdTTL: 60 });
+const cache = new node_cache_1.default({ stdTTL: 20 });
 //------ login ------
 const loginUser = async ({ username, password }) => {
     try {
         const user = await schema_1.userModel.findOne({ username });
-        const loginAttempts = failedLogins.get(user === null || user === void 0 ? void 0 : user.username) || 0;
+        const loginAttempts = failedLogins.get(username) || 0;
         console.log('loginAttempts', loginAttempts);
         if (loginAttempts >= 4) {
             throw new errorCatch_1.default({
@@ -39,7 +39,7 @@ const loginUser = async ({ username, password }) => {
         const isPasswordCorrect = await bcrypt_1.default.compare(password, user.password);
         if (isPasswordCorrect) {
             const accessTokenExpired = (0, date_fns_1.addDays)(new Date(), 1);
-            const accessToken = (0, jsonwebtoken_1.sign)({
+            const accessToken = jsonwebtoken_1.default.sign({
                 username: user.username,
                 id: user._id,
                 role: user.role
@@ -49,7 +49,7 @@ const loginUser = async ({ username, password }) => {
                 id: user._id,
                 role: user.role,
             };
-            const refreshToken = (0, jsonwebtoken_1.sign)(refreshTokenPayload, jwt_1.JWT_Sign, {
+            const refreshToken = jsonwebtoken_1.default.sign(refreshTokenPayload, jwt_1.JWT_Sign, {
                 expiresIn: '7d',
             });
             await failedLogins.del(username);
@@ -131,9 +131,9 @@ const registerUser = async ({ username, email, password }) => {
 };
 exports.registerUser = registerUser;
 //------ update user role ------
-const updateRole = async ({ _id, role }) => {
+const updateRole = async ({ username, role }) => {
     try {
-        const response = await schema_1.userModel.findByIdAndUpdate(_id, { role: role });
+        const response = await schema_1.userModel.findOneAndUpdate({ username: username }, { role: role }, { new: true });
         if (response) {
             return {
                 success: true,
@@ -155,6 +155,12 @@ const updateRole = async ({ _id, role }) => {
 };
 exports.updateRole = updateRole;
 //------ password reset request ------
+const sendEmail = (email, key) => {
+    console.log(`Subject: Password reset request`);
+    console.log(`To: ${email}`);
+    console.log(`${key}`);
+    // const linkReset = `https://week-16-rprasetyob-production.up.railway.app/reset?key=${key}  
+};
 const passResetReq = async (email) => {
     try {
         const user = await schema_1.userModel.findOne({ email: email });
@@ -167,10 +173,13 @@ const passResetReq = async (email) => {
         }
         const key = (0, uuid_1.v4)();
         cache.set(key, email, 25 * 1000);
+        sendEmail(user.email, key);
+        const linkReset = `${key}`;
+        // const linkReset = `https://week-16-rprasetyob-production.up.railway.app/reset?key=${key}`
         return {
             success: true,
             message: "Password reset link sent",
-            data: key
+            data: linkReset
         };
     }
     catch (error) {
@@ -182,3 +191,54 @@ const passResetReq = async (email) => {
     }
 };
 exports.passResetReq = passResetReq;
+const passwordReset = async (key, password) => {
+    try {
+        const email = cache.get(key);
+        if (!email) {
+            throw new errorCatch_1.default({
+                success: false,
+                status: 401,
+                message: "Invalid or expired token",
+            });
+        }
+        const user = await schema_1.userModel.findOne({ email: email });
+        if (!user) {
+            throw new errorCatch_1.default({
+                success: false,
+                message: 'Email invalid / not registered',
+                status: 401,
+            });
+        }
+        const hashedPassword = await bcrypt_1.default.hash(password, 10);
+        await user.updateOne({ password: hashedPassword });
+        cache.del(key);
+        return {
+            success: true,
+            message: 'Password reset successful',
+        };
+    }
+    catch (error) {
+        throw new errorCatch_1.default({
+            success: false,
+            message: error.message,
+            status: error.status,
+        });
+    }
+};
+exports.passwordReset = passwordReset;
+//------- RefreshToken -------
+const refreshAccessToken = async (refreshToken) => {
+    try {
+        const user = jsonwebtoken_1.default.verify(refreshToken, jwt_1.JWT_Sign);
+        const accessToken = jsonwebtoken_1.default.sign({ user }, jwt_1.JWT_Sign, { expiresIn: '15m' });
+        return accessToken;
+    }
+    catch (error) {
+        throw new errorCatch_1.default({
+            success: false,
+            message: error.message,
+            status: error.status,
+        });
+    }
+};
+exports.refreshAccessToken = refreshAccessToken;

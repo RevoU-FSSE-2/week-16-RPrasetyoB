@@ -3,12 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logoutUser = exports.update = exports.updateUser = exports.deleteUser = exports.login = exports.regUser = exports.getOneUser = exports.getAllUsers = void 0;
+exports.accessTokenRefresh = exports.resetPassReq = exports.resetPass = exports.logoutUser = exports.update = exports.login = exports.regUser = exports.getOneUser = exports.getAllUsers = void 0;
 const schema_1 = require("../config/schemas/schema");
 const userService_1 = require("../services/userService");
-const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const jwt_1 = require("../config/auth/jwt");
+const getCookie_1 = __importDefault(require("../reusable/getCookie"));
 //------ Login user ------
 const login = async (req, res, next) => {
     try {
@@ -55,25 +54,25 @@ const regUser = async (req, res, next) => {
     }
 };
 exports.regUser = regUser;
+//------ Update Role ------
 const update = async (req, res, next) => {
+    const tokenCookie = (0, getCookie_1.default)(req);
     try {
-        const { role } = req.body;
-        const token = req.cookies.accessToken;
-        if (!token) {
-            throw new Error("You are unauthorized");
+        if (!tokenCookie) {
+            return res.status(401).json({ success: false, message: "Unauthorized: Missing Token" });
         }
-        const decodedToken = jsonwebtoken_1.default.verify(token, jwt_1.JWT_Sign);
-        const userId = decodedToken.id;
-        const updatedRole = await (0, userService_1.updateRole)({ _id: userId, role: role });
-        if (updatedRole === null || updatedRole === void 0 ? void 0 : updatedRole.success) {
-            res.status(200).json({
-                success: true,
-                message: 'Update role success',
-                data: updatedRole
-            });
+        const decodedToken = jsonwebtoken_1.default.decode(tokenCookie);
+        const userRole = decodedToken.role;
+        if (userRole !== 'manager') {
+            return res.status(403).json({ success: false, message: "Unauthorized: Insufficient Permissions" });
+        }
+        const { username, role } = req.body;
+        const updatedRole = await (0, userService_1.updateRole)({ username, role });
+        if (updatedRole.success) {
+            return res.status(200).json({ success: true, message: 'Role updated successfully', updatedRole });
         }
         else {
-            throw new Error("User not found");
+            return res.status(404).json({ success: false, message: 'User not found' });
         }
     }
     catch (error) {
@@ -81,6 +80,82 @@ const update = async (req, res, next) => {
     }
 };
 exports.update = update;
+//------ Password reset -------
+const resetPassReq = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        const result = await (0, userService_1.passResetReq)(email);
+        if (result.success) {
+            return res.status(200).json({
+                success: true,
+                message: 'Password reset link sent',
+                data: result.data,
+            });
+        }
+        else {
+            return res.status(404).json({
+                success: false,
+                message: result.message,
+            });
+        }
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.resetPassReq = resetPassReq;
+const resetPass = async (req, res, next) => {
+    try {
+        const key = req.query.key;
+        const { password } = req.body;
+        const result = await (0, userService_1.passwordReset)(key, password);
+        if (result.success) {
+            return res.status(200).json({
+                success: true,
+                message: 'Password reset successful',
+            });
+        }
+        else {
+            return res.status(401).json({
+                success: false,
+                message: result.message,
+            });
+        }
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.resetPass = resetPass;
+//------ token refresh -------
+const accessTokenRefresh = async (req, res, next) => {
+    try {
+        const refreshToken = req.cookies.refreshToken;
+        if (!refreshToken) {
+            res.status(401).json({ message: 'No refresh token provided' });
+            return;
+        }
+        const accessToken = await (0, userService_1.refreshAccessToken)(refreshToken);
+        if (accessToken) {
+            res.cookie('accessToken', accessToken, {
+                httpOnly: true,
+                path: '/',
+                maxAge: 15 * 60 * 1000,
+            });
+            res.json({
+                success: true,
+                message: 'Access token refreshed successfully'
+            });
+        }
+        else {
+            res.status(403).json({ message: 'Invalid refresh token' });
+        }
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.accessTokenRefresh = accessTokenRefresh;
 //------ log out ------
 const logoutUser = async (req, res, next) => {
     try {
@@ -102,76 +177,6 @@ const logoutUser = async (req, res, next) => {
     }
 };
 exports.logoutUser = logoutUser;
-//------ Update user ------
-const updateUser = async (req, res) => {
-    try {
-        const userId = req.params.id;
-        const updates = req.body;
-        const { username, password, role } = updates;
-        if (!username) {
-            return res.status(400).json({
-                success: false,
-                message: "Username cannot be empty"
-            });
-        }
-        const existingUser = await schema_1.userModel.findOne({ username });
-        if (existingUser && existingUser._id.toString() !== userId) {
-            return res.status(409).json({
-                success: false,
-                message: "Username already exists"
-            });
-        }
-        if (role !== "employee") {
-            return res.status(400).json({
-                success: false,
-                message: "Possible role only Employee"
-            });
-        }
-        if (password && password.length < 8) {
-            return res.status(400).json({
-                success: false,
-                message: "Password must be at least 8 characters long"
-            });
-        }
-        if (password && !/(?=.*[a-zA-Z])(?=.*[0-9])/.test(password)) {
-            return res.status(400).json({
-                success: false,
-                message: "Password must contain both alphabetic and numeric characters"
-            });
-        }
-        if (password) {
-            updates.password = await bcrypt_1.default.hash(updates.password, 10);
-        }
-        const updatedUser = await schema_1.userModel.findByIdAndUpdate(userId, updates, { new: true });
-        if (updatedUser) {
-            return res.status(200).json({
-                success: true,
-                message: 'User updated successfully',
-                data: {
-                    _id: userId,
-                    username,
-                    role,
-                    passwordUpdated: !!password,
-                }
-            });
-        }
-        else {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found',
-                data: 'Not found'
-            });
-        }
-    }
-    catch (error) {
-        console.log('Error updating user:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'An error occurred while updating the user or userId wrong format'
-        });
-    }
-};
-exports.updateUser = updateUser;
 //------ Get all users ------
 const getAllUsers = async (req, res) => {
     try {
@@ -216,31 +221,3 @@ const getOneUser = async (req, res) => {
     }
 };
 exports.getOneUser = getOneUser;
-//------ Delete user ------
-const deleteUser = async (req, res) => {
-    try {
-        const id = req.params.id;
-        const deletedUser = await schema_1.userModel.findByIdAndDelete(id);
-        if (deletedUser) {
-            return res.status(201).json({
-                success: true,
-                message: 'user deleted successfully',
-                data: { id }
-            });
-        }
-        else {
-            return res.status(404).json({
-                success: false,
-                message: "failed to delete a user",
-                data: "Not found"
-            });
-        }
-    }
-    catch (error) {
-        console.log('Error delete user:', error);
-        return res.status(500).json({
-            message: 'An error occurred while deleting the user or userId wrong format'
-        });
-    }
-};
-exports.deleteUser = deleteUser;
