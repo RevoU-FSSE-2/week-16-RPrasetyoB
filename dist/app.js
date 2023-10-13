@@ -10,12 +10,14 @@ const db_connection_1 = require("./config/db/db.connection");
 const middlewares_1 = __importDefault(require("./middlewares"));
 const errorHandler_1 = __importDefault(require("./middlewares/errorHandler"));
 const cors_1 = __importDefault(require("cors"));
+const xRequestId_1 = __importDefault(require("./middlewares/xRequestId"));
 const app = (0, express_1.default)();
 const port = process.env.PORT || 3000;
 (0, db_connection_1.db)();
 app.use(express_1.default.json());
 app.use((0, cors_1.default)());
 (0, middlewares_1.default)(app);
+app.use(xRequestId_1.default);
 app.use(main_route_1.default);
 app.use(errorHandler_1.default);
 app.listen(port, () => {

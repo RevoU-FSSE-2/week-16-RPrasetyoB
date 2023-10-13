@@ -7,7 +7,6 @@ import cookieMidleware from "./cookiesParser";
 const middleWares = (app: Express)=> {
     helmetApp(app);
     morganApp(app);
-    app.use(xRequestId)
     cookieMidleware(app)
 }
 
