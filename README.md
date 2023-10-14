@@ -9,7 +9,7 @@ Project milestone 2. build a task management website application that integrates
 - Postman
 
 ## Deployment
-https://week-16-rprasetyob-production.up.railway.app/
+https://week-16-rprasetyob-production.up.railway.app
 
 ## User for testing
 ```json
