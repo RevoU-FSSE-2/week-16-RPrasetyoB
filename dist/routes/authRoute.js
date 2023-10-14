@@ -9,4 +9,5 @@ const authRoute = express_1.default.Router();
 authRoute.post('/v1/auth/register', userController_1.regUser);
 authRoute.post('/v1/auth/login', userController_1.login);
 authRoute.post('/v1/logout', userController_1.logoutUser);
+authRoute.post('/v1/refresh-token', userController_1.accessTokenRefresh);
 exports.default = authRoute;
