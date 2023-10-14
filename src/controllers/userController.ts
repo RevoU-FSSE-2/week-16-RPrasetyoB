@@ -136,24 +136,8 @@ const accessTokenRefresh = async (req: Request, res: Response, next: NextFunctio
     }
 
     if (!JWT_Sign) throw new Error('JWT_SIGN is not defined')
-      const decodedRefreshToken = jwt.verify(refreshToken, JWT_Sign);
 
     try {
-      if (!decodedRefreshToken || !decodedToken.exp) {
-        throw {
-          success: false,
-          status: 401,
-          message: 'Refresh token is invalid or has expired. Please login again',
-        }
-      }
-
-      if (decodedToken.exp < Date.now() / 1000) {
-        throw {
-          success: false,
-          status: 401,
-          message: "Refresh token has expired. Please login again"
-        }
-      }
       if(refreshToken) {
         const accessToken= jwt.sign(decodedToken, JWT_Sign)
   

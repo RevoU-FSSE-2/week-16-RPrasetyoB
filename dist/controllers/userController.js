@@ -140,22 +140,7 @@ const accessTokenRefresh = async (req, res, next) => {
     }
     if (!jwt_1.JWT_Sign)
         throw new Error('JWT_SIGN is not defined');
-    const decodedRefreshToken = jsonwebtoken_1.default.verify(refreshToken, jwt_1.JWT_Sign);
     try {
-        if (!decodedRefreshToken || !decodedToken.exp) {
-            throw {
-                success: false,
-                status: 401,
-                message: 'Refresh token is invalid or has expired. Please login again',
-            };
-        }
-        if (decodedToken.exp < Date.now() / 1000) {
-            throw {
-                success: false,
-                status: 401,
-                message: "Refresh token has expired. Please login again"
-            };
-        }
         if (refreshToken) {
             const accessToken = jsonwebtoken_1.default.sign(decodedToken, jwt_1.JWT_Sign);
             res.cookie("accessToken", accessToken, {
