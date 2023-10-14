@@ -12,7 +12,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     const result = await loginUser({ username, password });
     if (result.success) {  
       res.cookie("accessToken", result.message.accessToken, {
-        maxAge: 5 * 1000,
+        maxAge: 5 * 60 * 1000,
         httpOnly: true,
         path: '/'
       });
