@@ -156,20 +156,22 @@ const accessTokenRefresh = async (req, res, next) => {
                 message: "Refresh token has expired. Please login again"
             };
         }
-        const accessToken = jsonwebtoken_1.default.sign({
-            username: decodedToken.username,
-            id: decodedToken._id,
-            role: decodedToken.role
-        }, jwt_1.JWT_Sign, { expiresIn: '10m' });
-        res.cookie("accessToken", accessToken, {
-            maxAge: 10 * 60 * 1000,
-            httpOnly: true,
-        });
-        return res.status(200).json({
-            success: true,
-            message: "access token refresh successfully",
-            data: { accessToken }
-        });
+        if (refreshToken) {
+            const accessToken = jsonwebtoken_1.default.sign({
+                username: decodedToken.username,
+                id: decodedToken._id,
+                role: decodedToken.role
+            }, jwt_1.JWT_Sign, { expiresIn: '10m' });
+            res.cookie("accessToken", accessToken, {
+                maxAge: 10 * 60 * 1000,
+                httpOnly: true,
+            });
+            return res.status(200).json({
+                success: true,
+                message: "access token refresh successfully",
+                data: { accessToken }
+            });
+        }
     }
     catch (error) {
         next(error);
