@@ -155,15 +155,12 @@ const accessTokenRefresh = async (req: Request, res: Response, next: NextFunctio
         }
       }
       if(refreshToken) {
-        const accessToken= jwt.sign({
-          username: decodedToken.username,
-          id: decodedToken._id,
-          role: decodedToken.role
-        }, JWT_Sign, {expiresIn: '10m'})
+        const accessToken= jwt.sign(decodedToken, JWT_Sign)
   
         res.cookie("accessToken", accessToken, {
           maxAge: 10 * 60 * 1000,
           httpOnly: true,
+          path: '/'
         })
   
         return res.status(200).json({
