@@ -16,7 +16,7 @@ const login = async (req, res, next) => {
         const result = await (0, userService_1.loginUser)({ username, password });
         if (result.success) {
             res.cookie("accessToken", result.message.accessToken, {
-                maxAge: 5 * 60 * 1000,
+                maxAge: 15 * 1000,
                 httpOnly: true,
                 path: '/'
             });
