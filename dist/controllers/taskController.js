@@ -17,7 +17,6 @@ const getAllTask = async (req, res) => {
         if (userRole === "manager") {
             const task = await (0, taskService_1.getMakerTasks)();
             return res.status(200).json({
-                success: true,
                 message: "Successfully fetched all tasks",
                 result: task,
             });
