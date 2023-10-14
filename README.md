@@ -30,3 +30,7 @@ https://week-16-rprasetyob-production.up.railway.app/
     "password":"member123"
 }
 ```
+
+## Postman file for test with postman
+- Download file below and import to postman: <br>
+https://drive.google.com/file/d/1aABBLnqMAeLdxGb_yxiEFlIpM7vot8YU/view?usp=sharing
