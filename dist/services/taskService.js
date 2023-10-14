@@ -16,9 +16,6 @@ const getMakerTasks = async (username) => {
         return {
             success: true,
             status: 200,
-            message: username
-                ? "Successfully fetched tasks"
-                : "Successfully fetched all tasks",
             data: tasks,
         };
     }

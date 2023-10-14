@@ -17,7 +17,7 @@ const getAllTask = async (req: Request, res: Response) => {
       return res.status(200).json({
         success: true,
         message: "Successfully fetched all tasks",
-        data: task,
+        result: task,
       });
     } else {
       const username = decodedToken.username;

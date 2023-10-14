@@ -1,9 +1,4 @@
 import { taskModel, userModel } from "../config/schemas/schema";
-import bcrypt from "bcrypt";
-import { addDays } from "date-fns";
-import { JwtPayload, sign } from "jsonwebtoken";
-import { JWT_Sign } from "../config/auth/jwt";
-import NodeCache from "node-cache";
 import ErrorCatch from "../reusable/errorCatch";
 
 //------ get tasks ------
@@ -16,9 +11,6 @@ const getMakerTasks = async (username?: string) => {
     return {
       success: true,
       status: 200,
-      message: username
-        ? "Successfully fetched tasks"
-        : "Successfully fetched all tasks",
       data: tasks,
     };
   } catch (error: any) {

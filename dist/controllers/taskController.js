@@ -19,7 +19,7 @@ const getAllTask = async (req, res) => {
             return res.status(200).json({
                 success: true,
                 message: "Successfully fetched all tasks",
-                data: task,
+                result: task,
             });
         }
         else {
